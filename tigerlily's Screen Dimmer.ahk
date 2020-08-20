@@ -1,31 +1,34 @@
-;[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]
-;
-; tigerlily's Screen Dimmer
-; by tigerlily
-; version 0.3.0
-; written for autohotkey V2 alpha 122-f595abc2
-;
-; [CHANGE LOG], [PENDING] and [REMARKS]  
-; sections can be found @ bottom of script
-;
-;[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]
+;................................................................................
+;																				.
+; app ...........: tigerlily's Screen Dimmer									.
+; version .......: 0.4.0														.
+;																				.
+;................................................................................
+;																				.
+; author ........: tigerlily													.
+; language ......: AutoHotkey V2 (alpha 122-f595abc2)							.
+; github repo ...: https://git.io/tigerlilysScreenDimmer   						.
+; forum thread ..: https://bit.ly/tigerlilys-screen-dimmer-AHK-forum			.
+; license .......: MIT (https://git.io/tigerlilysScreenDimmerLicense)			.
+;																				.
+;................................................................................
+; [CHANGE LOG], [PENDING] and [REMARKS] @ bottom of script						.
+;................................................................................
 
 
-;[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]
-
-;        A U T O - E X    /    I N I T 
-
-;[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]
+;................................................................................
+;		   ...........................................................			.
+;           A U T O - E X E C U T E   &   I N I T I A L I Z A T I O N			.
+;................................................................................
 
 #SingleInstance
 global mon := Monitor.New()
 
 
-;[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]
-
-;             M A I N  S C R I P T
-
-;[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]
+;................................................................................
+;					  ..................................						.
+;                      T R A Y  M E N U   &   I C O N S		                 	.
+;................................................................................
 
 ;	Set Icon ToolTip and App Name
 A_IconTip := "tigerlily's Screen Dimmer"
@@ -48,11 +51,18 @@ try A_TrayMenu.SetIcon("Close" , A_ScriptDir "\close-app.png")
 (FileExist(A_ScriptDir "\tray-icon.png")) ? FileDelete(A_ScriptDir "\tray-icon.png") : ""
 (FileExist(A_ScriptDir "\close-app.png")) ? FileDelete(A_ScriptDir "\close-app.png") : ""
 
+
+
+;................................................................................
+;								     .......		        					.
+;                                     G U I       		                    	.
+;................................................................................
+
 ; Create monitor config menu
-monitorMenu := Gui.New("Resize", A_IconTip)
+	monitorMenu := Gui.New("Resize", A_IconTip)
 ,   monitorMenu.OnEvent("Close", (monitorMenu) => monitorMenu.Hide() )
 ,   monitorMenu.OnEvent("Size" , (monitorMenu, MinMax, *) => MinMax = -1 ? monitorMenu.Hide() : "" )
-,   monitorMenu.SetFont("c0xF7F7F7 s8 bold")
+,   monitorMenu.SetFont("c0xC6C8C5 s8 bold")
 ,   monitorMenu.BackColor := 0x000000,   monitorMenu.MarginX := 20,   monitorMenu.MarginY := 20
 
 ; Get all monitor info
@@ -67,15 +77,18 @@ monitorMenu := Gui.New("Resize", A_IconTip)
 
 ;	Create empty associative arrays to hold each GUI control object for each monitor found
 #Warn VarUnset, Off ; Stops useless warnings from being thrown due to dynamic variable/object creation below
-for feature in ["gammaAll", "gammaRed", "gammaGreen", "gammaBlue", "contrast", "brightness", "dimmer"]
+
+;	Note: going to replace the psuedo-arrays with proper Map() objects eventually
+for feature in features := ["gammaAll", "gammaRed", "gammaGreen", "gammaBlue", "contrast", "brightness", "dimmer"]
 {
-	%feature%Title := Map()
-,	%feature%SliderStart := Map()
-,	%feature%SliderEnd := Map()
-,	%feature%Slider_Change := Map()
-,	%feature%Slider := Map() 
+ 	%feature%Slider			:= Map() ; slider controls
+,	%feature%Title			:= Map() ; title text controls
+,	%feature%SliderStart	:= Map() ; slider front-end control ("0")
+,	%feature%SliderEnd		:= Map() ; slider back-end control ("100")
+,	%feature%Slider_Change	:= Map() ; OnEvent functions
 }
-dimmer := Map(), PowerOnRadio := Map(), PowerOnRadio_Change := Map(), PowerOffRadio := Map(), PowerOffRadio_Change := Map()
+PowerOnRadio := Map(), PowerOnRadio_Change := Map(), PowerOffRadio := Map(), PowerOffRadio_Change := Map()
+,	  dimmer := Map()
 
 ;	Detect hidden windows so script can see transparent dimmer overlay GUIs when present
 ,	DetectHiddenWindows("On")
@@ -180,7 +193,8 @@ while ((i := A_Index - ( monitorCount > 1 ? 1 : 0)) <= monitorCount)
 monitorMenuTabs.UseTab("Advanced Settings")
 ,	monitorMenu.Add("Text", "w400", 
 	"Background Modes:`n`n"
-	"Some backgrounds in programs like Excel or Notepad are terribly white and even in the day time can be way too bright. The following Background Modes help solve this issue by changing the background color and text colors system-wide.")
+	"Some backgrounds in programs like Excel or Notepad are terribly white and even in the day time can be way too bright. The following Background Modes helps partially solve this issue by changing the background, window, and text colors system-wide.`n`n"
+	"(This will reset to default system colors when you close this app)")
 ,	BackgroundNormalModeRadio := monitorMenu.Add("Radio", "Group vNormal", "Normal Mode (default)").OnEvent("Click", "BackgroundMode_Change") 
 ,	BackgroundMorningModeRadio := monitorMenu.Add("Radio", "vMorning", "Morning Mode").OnEvent("Click", "BackgroundMode_Change")
 ,	BackgroundDayModeRadio := monitorMenu.Add("Radio", "vDay", "Day Mode").OnEvent("Click", "BackgroundMode_Change")
@@ -195,15 +209,15 @@ monitorMenuTabs.UseTab("Advanced Settings")
 	"It also allows you to turn on/off your monitors with a click of a button, which can sometimes help with focusing on a multi-monitor setup.`n`n"
 	"This is a work in progress, but will eventually contain customizable hotkeys, custom timers, color temperature settings, and more.`n`n`n"
 	"Please report any bugs at either:`n`n"
-	"<a href=`"https://github.com/tigerlily-dev/tigerlilys-Screen-Dimmer`">---> GitHub Repository</a>`n`n" 
-	"<a href=`"https://www.autohotkey.com/boards/viewtopic.php?f=83&t=79220#p347275`">---> AutoHotkey Forum Thread</a>`n`n`n"
+	"<a href=`"https://git.io/tigerlilysScreenDimmer`">---> GitHub Repository</a>`n`n" 
+	"<a href=`"https://bit.ly/tigerlilys-screen-dimmer-AHK-forum`">---> AutoHotkey Forum Thread</a>`n`n`n"
 	"Feel free email me directly about bugs and about any desired features you want me to add at: <a href=`"mailto: tigerlily.developer@gmail.com`">tigerlily.developer@gmail.com</a>")
 
 
 ; Sets "All Monitors" Tab sliders if all monitors have matching current feature setting values
 if (monitorCount > 1)
 {
-	loadAllgammaRedAll :="", loadAllgammaGreenAll := "", loadAllgammaBlueAll := ""
+	; Note: Going to replace dynamic variables with proper Map() objects at some point
 	for feature in ["gammaRed", "gammaGreen", "gammaBlue", "contrast", "brightness"]
 	{
 		while ((i := A_Index) <= monitorCount)
@@ -239,11 +253,13 @@ if (monitorCount > 1)
 }
 monitorMenu.Show()
 
-;[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]
 
-;                H O T K E Y S
 
-;[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]
+;................................................................................
+;								  ...............								;
+;                                  H O T K E Y S		                    	;
+;................................................................................
+
 
 ;   Close app
 ^Esc::ExitApp()
@@ -265,11 +281,11 @@ monitorMenu.Show()
 }
 
 
-;[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]
 
-;              F U N C T I O N S
-
-;[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]
+;................................................................................
+;								...................								;
+;                                F U N C T I O N S		                    	;
+;................................................................................
 
 
 MonitorTabs(){ ; Creates tabs based on # of monitors found
@@ -507,17 +523,16 @@ ResetGammaAndBackgroundMode(*){
 
 
 
-;[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]
-
-;                C L A S S E S
-
-;[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]
+;................................................................................
+;								  ................								;
+;                                  C L A S S E S		                    	;
+;................................................................................
 
 ;   Monitor Configuration Class
-;   https://www.autohotkey.com/boards/viewtopic.php?f=83&t=79220
+;   https://git.io/MonitorConfigurationClass
 
 ;   This is a stripped down version, including only what's needed for app
-;	full version for v2 can be found above, link to v1 class included at top of thread
+;	full version for v2 can be found above
 
 class Monitor { 
 
@@ -837,15 +852,18 @@ class Monitor {
 }
 
 
-
-;[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]
-
-;             C H A N G E   L O G
-
-;[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]
 /* 
+;................................................................................
+;		                      .....................		                        ;
+;                              C H A N G E   L O G	                            ;
+;................................................................................
+
 
 	
+	2020-08-20: Changed default GUI font color to a less-bright off white color easier on eyes (0xC6C8C5) 
+	2020-08-20: Updated formatting, particularly section headers 
+
+
 	2020-08-18: Reduced code size by creating maps dynamically instead of hard-coded
 	2020-08-18: Updated "App Info / Report Bug" tab to include GitHub repo and AHK Forum thread
 	2020-08-18: Removed debug value check MsgBox popup when changing monitor state to Power Off 
@@ -876,35 +894,34 @@ class Monitor {
 
 
     2020-08-13: Fixed a few minor bugs affecting settings adjustment response time
-    2020-08-13: Version 0.0.0 published
+    2020-08-13: Version 0.1.0 published
 
 
 
- */
-;[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]
 
-;                P E N D I N G
-
-;[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]
-/* 
+;................................................................................
+;		                         ...............		                        ;
+;                                 P E N D I N G	          	                    ;
+;................................................................................
+ 
 
 
     - Customizable Hotkeys based on which monitor cursor is located in
     - Reduce code size by merging most GUI_Change() functions into universal function(s)
     - Custom daily/hourly/per-minute timer/auto-adjuster 
 	- Adjustable screen focuser for reading, etc (blacks out desired portion of screen)
+	- User Profiles to save/load personalized user settings on app start / while app is running
 	- Color Temperature adjustments (may not add this)
     - Color Gain / Drive for added color adjustment (may not add this)
 
 
 
- */
-;[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]
 
-;                 R E M A R K S
+;................................................................................
+;		                         ...............		                        ;
+;                                 R E M A R K S	          	                    ;
+;................................................................................
 
-;[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]
-/* 
 
 
     - It appears the SetSysColors winapi is broken for some display elements in Windows 10,
@@ -918,30 +935,3 @@ class Monitor {
 
 
 */
-
-
- /* 
-  Add this when out of debugging phase
- ; #Warn VarUnset, Off ; Stops useless warnings from being thrown due to dynamic variable/object creation
-;	Create empty associative arrays to hold each GUI control object for each monitor found
-; for feature in ["gammaAll", "gammaRed", "gammaGreen", "gammaBlue", "contrast", "brightness", "dimmer"]
-; {
-; 	%feature%Title := Map()
-; ,	%feature%SliderStart := Map()
-; ,	%feature%SliderEnd := Map()
-; ,	%feature%Slider_Change := Map()
-; ,	%feature%Slider := Map() 
-; }
-; dimmer := Map(), PowerOnRadio := Map(), PowerOnRadio_Change := Map(), PowerOffRadio := Map(), PowerOffRadio_Change := Map()
- 
-
-,   gammaAllTitle := Map(),   gammaAllSliderStart := Map(),   gammaAllSlider := Map(),    gammaAllSliderEnd := Map(),   gammaAllSlider_Change := Map()   
-,   gammaRedTitle := Map(),   gammaRedSliderStart := Map(),   gammaRedSlider := Map(),    gammaRedSliderEnd := Map(),   gammaRedSlider_Change := Map()
-,   gammaGreenTitle := Map(), gammaGreenSliderStart := Map(), gammaGreenSlider := Map(),  gammaGreenSliderEnd := Map(), gammaGreenSlider_Change := Map()
-,   gammaBlueTitle := Map(),  gammaBlueSliderStart := Map(),  gammaBlueSlider := Map(),   gammaBlueSliderEnd := Map(),  gammaBlueSlider_Change := Map()
-,   brightnessTitle := Map(), brightnessSliderStart := Map(), brightnessSlider := Map(),  brightnessSliderEnd := Map(), brightnessSlider_Change := Map()
-,   contrastTitle := Map(),   contrastSliderStart := Map(),   contrastSlider := Map(),    contrastSliderEnd := Map(),   contrastSlider_Change := Map()
-,   dimmer := Map(),		  dimmerTitle := Map(), 		  dimmerSliderStart := Map(), dimmerSlider := Map(),		dimmerSliderEnd := Map()
-,   PowerOnRadio := Map(),    PowerOnRadio_Change := Map(),   PowerOffRadio := Map(),     PowerOffRadio_Change := Map()
-
-  */
