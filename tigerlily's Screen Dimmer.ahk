@@ -1,14 +1,14 @@
 ;...............................................................................;
 ;                                                                               ;
 ; app ...........: tigerlily's Screen Dimmer		                        ;
-; version .......: 0.5.0                                                        ;
+; version .......: 0.5.1                                                        ;
 ;                                                                               ;
 ;...............................................................................;
 ;                                                                               ;
 ; author ........: tigerlily                                                    ;
 ; language ......: AutoHotkey V2 (alpha 122-f595abc2)                           ;
 ; github repo ...: https://git.io/tigerlilysScreenDimmer			;
-; download EXE ..: https://bit.ly/tigerlilys-screen-dimmer-download-exe		;
+; download EXE ..: https://git.io/JUUAu						;
 ; forum thread ..: https://bit.ly/tigerlilys-screen-dimmer-AHK-forum		;
 ; license .......: MIT (https://git.io/tigerlilysScreenDimmerLicense)		;
 ;                                                                               ;
@@ -44,7 +44,7 @@ A_IconTip := "tigerlily's Screen Dimmer"
 ,	OnMessage(0x404, (wParam, lParam, *) => lParam = 0x201 ? monitorMenu.Show() : "") 
 
 ; Try to download and set tray/menu icons without keeping images saved locally
-try Download("https://i.imgur.com/WQsv9rk.png", A_ScriptDir "\tray-icon.png")
+try Download("https://i.imgur.com/VoXGvak.png", A_ScriptDir "\tray-icon.png")
 try Download("https://i.imgur.com/Ea1kZrE.png", A_ScriptDir "\close-app.png")
 try TraySetIcon(A_ScriptDir "\tray-icon.png")
 try A_TrayMenu.SetIcon(A_IconTip , A_ScriptDir "\tray-icon.png")
@@ -63,7 +63,7 @@ try (FileExist(A_ScriptDir "\close-app.png")) ? FileDelete(A_ScriptDir "\close-a
 	monitorMenu := Gui.New("Resize", A_IconTip)
 ,   monitorMenu.OnEvent("Close", (monitorMenu) => monitorMenu.Hide())
 ,   monitorMenu.OnEvent("Size" , (monitorMenu, MinMax, *) => (MinMax = -1 ? monitorMenu.Hide() : ""))
-,   monitorMenu.SetFont("c0xC6C8C5 s8 bold q5")
+,   monitorMenu.SetFont("c0x7678D0 s9 bold q5")
 ,   monitorMenu.BackColor := 0x000000,   monitorMenu.MarginX := 20,   monitorMenu.MarginY := 20
 
 ; Get all monitor info
@@ -146,12 +146,9 @@ while ((i := A_Index - (monitorCount > 1 ? 1 : 0)) <= monitorCount)
         catch
             powerCapability := false    
             
-        try 
-        {
-            s := "mon.RestoreFactoryDefaults(i)" ; Needs better structure here
+        if (brightnessCapability && contrastCapability && powerCapability) 
             resetCapability := true
-        }    
-        catch
+        else
             resetCapability := false 
 
 		
@@ -161,59 +158,59 @@ while ((i := A_Index - (monitorCount > 1 ? 1 : 0)) <= monitorCount)
 			resetAbility := ""
 	}	;	Note: these all need to be recreated with a map for each monitor found
 
-;	Create Monitor Config controls
-    gammaAllTitle[i]	:= monitorMenu.Add("Text", "w200 Section Center", "Gamma (All):`t`t" 100 "%")
-,   gammaAll[i]		:= monitorMenu.Add("Slider", "xp AltSubmit ToolTip TickInterval10 Page10 Thick30 vGammaAll" i, 100)
+	; Create Monitor Config controls
+    gammaAllTitle[i]	:= monitorMenu.Add("Text",	"w200 Section Center", "Gamma (All):`t`t" 100 "%")
+,   gammaAll[i]			:= monitorMenu.Add("Slider", "xp AltSubmit ToolTip TickInterval10 Page10 Thick30 vGammaAll" i, 100)
 
-,   gammaRedTitle[i]	:= monitorMenu.Add("Text", "w200 xp Center", "Gamma (Red):`t`t" Round(i ? gR : 100) "%")
-,   gammaRed[i]		:= monitorMenu.Add("Slider", "xp AltSubmit ToolTip TickInterval10 Page10 Thick30 vGammaRed" i, (i ? gR : 100))
+,   gammaRedTitle[i]	:= monitorMenu.Add("Text",	"w200 xp Center", "Gamma (Red):`t`t" Round(i ? gR : 100) "%")
+,   gammaRed[i]			:= monitorMenu.Add("Slider", "xp AltSubmit ToolTip TickInterval10 Page10 Thick30 vGammaRed" i, (i ? gR : 100))
 
-,   gammaGreenTitle[i]	:= monitorMenu.Add("Text", "w200 xp Center", "Gamma (Green):`t" Round(i ? gG : 100) "%")
-,   gammaGreen[i]	:= monitorMenu.Add("Slider", "xp AltSubmit ToolTip TickInterval10 Page10 Thick30 vGammaGreen" i, (i ? gG : 100))
+,   gammaGreenTitle[i]	:= monitorMenu.Add("Text",	  "w200 xp Center", "Gamma (Green):`t" Round(i ? gG : 100) "%")
+,   gammaGreen[i]		:= monitorMenu.Add("Slider", "xp AltSubmit ToolTip TickInterval10 Page10 Thick30 vGammaGreen" i, (i ? gG : 100))
 
-,   gammaBlueTitle[i]	:= monitorMenu.Add("Text", "w200 xp Center", "Gamma (Blue):`t`t" Round(i ? gB : 100) "%")
-,   gammaBlue[i]	:= monitorMenu.Add("Slider", "xp AltSubmit ToolTip TickInterval10 Page10 Thick30 vGammaBlue" i, (i ? gB : 100)) ; add iset
+,   gammaBlueTitle[i]	:= monitorMenu.Add("Text",	 "w200 xp Center", "Gamma (Blue):`t`t" Round(i ? gB : 100) "%")
+,   gammaBlue[i]		:= monitorMenu.Add("Slider", "xp AltSubmit ToolTip TickInterval10 Page10 Thick30 vGammaBlue" i, (i ? gB : 100)) ; add iset
 
-,   brightnessTitle[i]	:= monitorMenu.Add("Text", "w200 xs+220 ys Center", "Brightness:`t`t" Round(i ? (IsSet(b) ? b : 0) : 100) "%")
-,   brightness[i]	:= monitorMenu.Add("Slider", "xp AltSubmit ToolTip TickInterval10 Page10 Thick30 " (i ? (IsSet(b) ? "" : "Disabled") : "") " vBrightnessSlider" i, (i ? (IsSet(b) ? b : 0) : 100))
+,   brightnessTitle[i]	:= monitorMenu.Add("Text",	  "w200 xs+220 ys Center", "Brightness:`t`t" Round(i ? (IsSet(b) ? b : 0) : 100) "%")
+,   brightness[i]		:= monitorMenu.Add("Slider", "xp AltSubmit ToolTip TickInterval10 Page10 Thick30 " (i ? (IsSet(b) ? "" : "Disabled") : "") " vBrightnessSlider" i, (i ? (IsSet(b) ? b : 0) : 100))
 
-,   contrastTitle[i]	:= monitorMenu.Add("Text", "w200 xp Center", "Contrast:`t`t" Round(i ? (IsSet(c) ? c : 0) : 100) "%")
-,   contrast[i]		:= monitorMenu.Add("Slider", "xp AltSubmit ToolTip TickInterval10 Page10 Thick30 " (i ? (IsSet(c) ? "" : "Disabled") : "") "  vContrastSlider" i, (i ? (IsSet(c) ? c : 0) : 100))
+,   contrastTitle[i]	:= monitorMenu.Add("Text",	  "w200 xp Center", "Contrast:`t`t" Round(i ? (IsSet(c) ? c : 0) : 100) "%")
+,   contrast[i]			:= monitorMenu.Add("Slider", "xp AltSubmit ToolTip TickInterval10 Page10 Thick30 " (i ? (IsSet(c) ? "" : "Disabled") : "") "  vContrastSlider" i, (i ? (IsSet(c) ? c : 0) : 100))
 
-,   dimmerTitle[i]	:= monitorMenu.Add("Text", "w200 xp Center", "Dimmer (Overlay):`t" 0 "%")
-,   dimmer[i]		:= monitorMenu.Add("Slider", "xp AltSubmit ToolTip TickInterval10 Page10 Thick30 vDimmerSlider" i, 0)
-,   dimmerVisible[i]	:= false
+,   dimmerTitle[i]		:= monitorMenu.Add("Text",	  "w200 xp Center", "Dimmer (Overlay):`t" 0 "%")
+,   dimmer[i]			:= monitorMenu.Add("Slider", "xp AltSubmit ToolTip TickInterval10 Page10 Thick30 vDimmerSlider" i, 0)
+,	dimmerVisible[i]	:= false
 
 ,   PowerOn[i]  := monitorMenu.Add("Radio", "xp Group " (i ? (IsSet(p) ? "" : "Disabled") : "") " vPowerOnRadio"  i, "Turn " ( i ? "[" info[i]["Name"] "]" : "All Monitors" ) " On")
-,   PowerOff[i] := monitorMenu.Add("Radio", "xp " 	(i ? (IsSet(p) ? "" : "Disabled") : "") " vPowerOffRadio" i, "Turn " ( i ? "[" info[i]["Name"] "]" : "All Monitors" ) " Off")
+,   PowerOff[i] := monitorMenu.Add("Radio", "xp " 	    (i ? (IsSet(p) ? "" : "Disabled") : "") " vPowerOffRadio" i, "Turn " ( i ? "[" info[i]["Name"] "]" : "All Monitors" ) " Off")
 
-,	ResetSettings[i] := monitorMenu.Add("Checkbox", "xp " (IsSet(resetAbility) ? resetAbility : "") " vResetSettings" i, "Reset to Factory Settings")
+,	ResetSettings[i] := monitorMenu.Add("Checkbox", "xp " (i ? (resetCapability ? "" : "Disabled") : "") " vResetSettings" i, "Reset to Factory Settings")
 
-,   gammaAll[i].OnEvent(     "Change", "AdjustGamma")
-,   gammaRed[i].OnEvent(     "Change", "AdjustGamma")
-,   gammaGreen[i].OnEvent(   "Change", "AdjustGamma")
-,   gammaBlue[i].OnEvent(    "Change", "AdjustGamma")
-,   brightness[i].OnEvent(   "Change", "AdjustBrightnessOrContrast")
-,   contrast[i].OnEvent(     "Change", "AdjustBrightnessOrContrast")    
-,   dimmer[i].OnEvent(	     "Change", "AdjustDimmer")    
-,   PowerOn[i].OnEvent(	     "Click" , "ChangePowerState")    
-,   PowerOff[i].OnEvent(     "Click" , "ChangePowerState")    
-,   ResetSettings[i].OnEvent("Click" , "ResetSettings")    
+,   gammaAll[i].OnEvent(  	 "Change", "AdjustGamma")
+,   gammaRed[i].OnEvent(  	 "Change", "AdjustGamma")
+,   gammaGreen[i].OnEvent(	 "Change", "AdjustGamma")
+,   gammaBlue[i].OnEvent( 	 "Change", "AdjustGamma")
+,   brightness[i].OnEvent(	 "Change", "AdjustBrightnessOrContrast")
+,   contrast[i].OnEvent(  	 "Change", "AdjustBrightnessOrContrast")    
+,   dimmer[i].OnEvent(	  	 "Change", "AdjustDimmer")    
+,	PowerOn[i].OnEvent(	  	 "Click" , "ChangePowerState")    
+,	PowerOff[i].OnEvent(  	 "Click" , "ChangePowerState")    
+,	ResetSettings[i].OnEvent("Click" , "ResetSettings")    
 }
 
-; Make additional tabs
-monitorMenuTabs.UseTab("Background Modes")
+	; Make additional tabs
+	monitorMenuTabs.UseTab("Background Modes")
 ,	monitorMenu.Add("Text", "w400", 
 		"Background Modes:`n`n"
 		"Some backgrounds in programs like Excel or Notepad are terribly white and even in the day time can be way too bright. The following Background Modes helps partially solve this issue by changing the background, window, and text colors system-wide.`n`n"
 		"(This will reset to default system colors when you close this app)")
-,	BackgroundNormalModeRadio	:= monitorMenu.Add("Radio", "Group vNormal" , "Normal Mode (default)").OnEvent("Click", "ChangeBackgroundMode") 
-,	BackgroundMorningModeRadio	:= monitorMenu.Add("Radio", "vMorning"	    , "Morning Mode"	     ).OnEvent("Click", "ChangeBackgroundMode")
-,	BackgroundDayModeRadio		:= monitorMenu.Add("Radio", "vDay"	    , "Day Mode"	     ).OnEvent("Click", "ChangeBackgroundMode")
-,	BackgroundNightModeRadio	:= monitorMenu.Add("Radio", "vNight"	    , "Night Mode"	     ).OnEvent("Click", "ChangeBackgroundMode")
-,	BackgroundEveningModeRadio	:= monitorMenu.Add("Radio", "vEvening"	    , "Evening Mode"	     ).OnEvent("Click", "ChangeBackgroundMode")
-,	BackgroundMidnightModeRadio	:= monitorMenu.Add("Radio", "vMidnight"	    , "Midnight Mode"	     ).OnEvent("Click", "ChangeBackgroundMode")
-,	BackgroundTwilightModeRadio	:= monitorMenu.Add("Radio", "vTwilight"	    , "Twilight Mode"	     ).OnEvent("Click", "ChangeBackgroundMode")
+,	BackgroundNormalModeRadio	:= monitorMenu.Add("Radio", "Group vNormal", "Normal Mode (default)").OnEvent("Click", "ChangeBackgroundMode") 
+,	BackgroundMorningModeRadio	:= monitorMenu.Add("Radio", "vMorning"	   , "Morning Mode"	).OnEvent("Click", "ChangeBackgroundMode")
+,	BackgroundDayModeRadio		:= monitorMenu.Add("Radio", "vDay"		   , "Day Mode"		).OnEvent("Click", "ChangeBackgroundMode")
+,	BackgroundNightModeRadio	:= monitorMenu.Add("Radio", "vNight"	   , "Night Mode"	).OnEvent("Click", "ChangeBackgroundMode")
+,	BackgroundEveningModeRadio	:= monitorMenu.Add("Radio", "vEvening"	   , "Evening Mode"	).OnEvent("Click", "ChangeBackgroundMode")
+,	BackgroundMidnightModeRadio	:= monitorMenu.Add("Radio", "vMidnight"	   , "Midnight Mode").OnEvent("Click", "ChangeBackgroundMode")
+,	BackgroundTwilightModeRadio	:= monitorMenu.Add("Radio", "vTwilight"	   , "Twilight Mode").OnEvent("Click", "ChangeBackgroundMode")
 
 ,	monitorMenuTabs.UseTab("Background Themes")
 ,	monitorMenu.Add("Text", "w400", 
@@ -282,7 +279,7 @@ if (monitorCount > 1)
 	if (gammaRedAllLoadAll = true && gammaGreenAllLoadAll = true && gammaBlueAllLoadAll = true)
 	{
 		gammaAll[0].Value := gammaRed[1].Value
-		gammaAllTitle[0].Value := "Gamma (All):`t`t" Round(gammaAll[0].Value) "%"
+	,	gammaAllTitle[0].Value := "Gamma (All):`t`t" Round(gammaAll[0].Value) "%"
 		Loop(monitorCount)
 		{
 			gammaAll[A_Index].Value := gammaAll[0].Value 
@@ -378,11 +375,11 @@ AdjustBrightnessOrContrast(slider, *){
 		v := slider.Value, name := slider.Name
 		if (n := Integer(SubStr(name, -1)))
 			InStr(name, "Brightness") ? (mon.SetBrightness(v, n), (brightnessTitle[n].Value := "Brightness:`t`t" Round(v) "%")) 
-						  : (mon.SetContrast(v, n), (contrastTitle[n].Value := "Contrast:`t`t" Round(v) "%"))
+									  : (mon.SetContrast(v, n), (contrastTitle[n].Value := "Contrast:`t`t" Round(v) "%"))
 		else
 			while ((i := A_Index) <= monitorCount)
 				InStr(name, "Brightness") ? (mon.SetBrightness(brightness[i].Value := v, i), (brightnessTitle[0].Value := brightnessTitle[i].Value := "Brightness:`t`t" Round(v) "%"))  
-							  : (mon.SetContrast(contrast[i].Value := v, i), (contrastTitle[0].Value := contrastTitle[i].Value := "Contrast:`t`t" Round(v) "%"))
+										  : (mon.SetContrast(contrast[i].Value := v, i), (contrastTitle[0].Value := contrastTitle[i].Value := "Contrast:`t`t" Round(v) "%"))
 		Sleep(100) ; Calling these methods below too fast can throw errors, so give 100 ms break
 	}
 }
@@ -422,7 +419,7 @@ AdjustDimmer(slider, *){
 						overlay[i].Show("x" x[i] " y" y[i] " w" w[i] " h" h[i])
 						dimmerVisible[i] := true
 					}
-					 dimmerTitle[0].Value := dimmerTitle[i].Value := "Dimmer (Overlay):`t" Round(v) "%"
+					dimmerTitle[0].Value := dimmerTitle[i].Value := "Dimmer (Overlay):`t" Round(dimmer[i].Value := v) "%"
 				}
 				else
 				{
@@ -709,7 +706,7 @@ GradientActiveTitle=0
 GradientlnactiveTitle=0
 GrayText=105 101 101
 Hilight=64 61 61
-HilightText=197 200 198
+HilightText=227 229 228
 HotTrackingColor=240 176 0
 InactiveBorder=0
 InactiveTitle=0
@@ -837,10 +834,11 @@ WindowText=48 50 140
 
 	; 
 	FileExist(themeFilePath) ?  Run(themeFilePath) 
-				 : (FileAppend(%name%ThemeFile, themeFilePath), Run(themeFilePath))
-	Loop(3)
-	if WinWait("Settings ahk_class ApplicationFrameWindow")
-		try WinClose()
+							 : (FileAppend(%name%ThemeFile, themeFilePath), Run(themeFilePath))
+
+	if (WinWaitActive("Settings ahk_class ApplicationFrameWindow"))
+		WinClose()
+
 }
 
 ResetSettings(chkbx, *){
@@ -918,8 +916,8 @@ ResetSettings(chkbx, *){
 		}        
 	}	
 
-	n ?	(SetTimer("PleaseWaitNotification", 0), ToolTip(), MsgBox("Monitor " n " restored to factory settings!", A_IconTip))	
-	  : (SetTimer("PleaseWaitNotification", 0), ToolTip(), MsgBox("All monitors restored to factory settings!" , A_IconTip))
+	n ?	(SetTimer("PleaseWaitNotification", 0), ToolTip(), MsgBox("Monitor " n " restored to factory settings!", A_IconTip, "T6"))	
+	  : (SetTimer("PleaseWaitNotification", 0), ToolTip(), MsgBox("All monitors restored to factory settings!" , A_IconTip, "T6"))
 			
 	PleaseWaitNotification(){
 		
@@ -1293,6 +1291,13 @@ class Monitor {
 
 
 	
+	2020-08-25: Changed tray/taskbar icon to a gold color
+	2020-08-25: Changed app font color to aqua purple color to be easier on eyes
+	2020-08-25: Made Theme popup menu close more reliably when switching themes
+	2020-08-25: Fixed bug of dimmer values not updating for individual monitors when
+					using "All Monitors" slider
+	
+
 	2020-08-24: Re-wrote control positioning code to always display in alignment in Config GUI
 	2020-08-24: Added "Reset to Factory Settings" feature for all/specific monitors
 	2020-08-24: Added "gamma" and "reset to default" capability checks for each monitor
@@ -1309,6 +1314,7 @@ class Monitor {
 	2020-08-24: Added Twilight Mode to compliment newly added Twilight Theme
 	2020-08-24: Added "Background Themes" tab and feature for ultra-dark system-wide color theming
 					with Windows Default Light and Dark Themes, Midnight Theme and Twilight Theme
+	
 	
 	2020-08-20: Changed default GUI font color to a less-bright off white color easier on eyes (0xC6C8C5) 
 	2020-08-20: Updated formatting, particularly section headers 
